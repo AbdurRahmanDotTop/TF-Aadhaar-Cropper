@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Disclaimer">
+    <div class="w-full max-w-[800px] mx-auto px-lg py-5xl">
+        <h1 class="text-display-lg font-bold tracking-tight text-ink mb-md">Disclaimer</h1>
+        
+        <div class="prose prose-slate max-w-none text-body-md text-body space-y-md">
+            <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
+            
+            <p>All the information on this website - techilyfly.com/tools/tfaadhaarcropper - is published in good faith and for general information purpose only. TF Aadhaar Cropper does not make any warranties about the completeness, reliability and accuracy of this information.</p>
+
+            <h2 class="text-display-sm font-semibold text-ink mt-xl mb-xs">Important Notice Regarding Aadhaar</h2>
+            <p><strong>TF Aadhaar Cropper is NOT affiliated with UIDAI, the Government of India, or any official government agency.</strong> We are an independent, private utility tool designed to help users locally crop and format their e-Aadhaar PDFs for easier printing.</p>
+
+            <h2 class="text-display-sm font-semibold text-ink mt-xl mb-xs">Data Privacy</h2>
+            <p>As explicitly stated in our Privacy Policy, our tool is built using client-side JavaScript. This means your Aadhaar PDF and password NEVER leave your computer or browser. We do not have servers that process your files, therefore we cannot view, steal, or distribute your sensitive documents.</p>
+
+            <h2 class="text-display-sm font-semibold text-ink mt-xl mb-xs">Consent</h2>
+            <p>By using our website, you hereby consent to our disclaimer and agree to its terms.</p>
+            
+            <h2 class="text-display-sm font-semibold text-ink mt-xl mb-xs">Update</h2>
+            <p>Should we update, amend or make any changes to this document, those changes will be prominently posted here.</p>
+        </div>
+    </div>
+</Layout>

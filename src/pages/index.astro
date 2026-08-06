@@ -1,0 +1,401 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Crop Aadhaar Card Online">
+    <!-- Hero Section -->
+    <section class="w-full relative overflow-hidden flex flex-col items-center justify-center py-5xl">
+        <div class="absolute inset-0 mesh-gradient-bg pointer-events-none -z-10"></div>
+        <div class="max-w-[800px] w-full px-lg text-center z-10 flex flex-col items-center">
+            <span class="inline-block bg-canvas border border-hairline rounded-full px-sm py-xs text-caption font-medium text-ink mb-lg shadow-sm">
+                100% Private & Secure (Browser Processing)
+            </span>
+            <h1 class="text-display-xl font-bold tracking-tight text-ink mb-md text-balance leading-tight">
+                Crop & Print your <br class="hidden sm:block"/> e-Aadhaar in seconds.
+            </h1>
+            <p class="text-body-lg text-body max-w-[672px] mb-xl text-balance">
+                Upload your password-protected PDF or image. We automatically format it into the perfect 4x6 or A4 size for printing. Your files never leave your device.
+            </p>
+        </div>
+    </section>
+
+    <!-- Upload & Processing Section -->
+    <section class="w-full max-w-[1000px] mx-auto px-lg pt-xl md:pt-2xl pb-5xl flex flex-col items-center">
+        <!-- Uploader Card -->
+        <div id="upload-card" class="w-full max-w-[576px] bg-canvas border-2 border-dashed border-hairline-strong rounded-xl p-2xl text-center cursor-pointer hover:border-link hover:bg-canvas-soft transition-colors flex flex-col items-center justify-center group shadow-sm">
+            <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden" />
+            <svg class="w-12 h-12 text-mute group-hover:text-link mb-sm transition-colors" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <h3 class="text-display-sm font-semibold text-ink mb-xs">Choose a file or drag & drop it here</h3>
+            <p class="text-body-sm text-mute">Supports Aadhaar PDF and Images up to 10MB</p>
+        </div>
+
+        <!-- Password Modal (Hidden) -->
+        <div id="password-modal" class="hidden w-full max-w-[448px] card-marketing mt-xl border border-warning">
+            <h3 class="text-display-sm font-semibold text-ink mb-sm">Password Required</h3>
+            <p class="text-body-sm text-body mb-md">This PDF is protected. Your e-Aadhaar password is usually the first 4 letters of your name (in capital) followed by your year of birth (e.g., ANIS1989).</p>
+            <form id="password-form" class="flex flex-col gap-sm">
+                <input type="password" id="pdf-password" placeholder="Enter Password" class="bg-canvas border border-hairline rounded-sm px-sm h-[40px] text-body-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary w-full" />
+                <button type="submit" class="btn-primary w-full">Unlock PDF</button>
+            </form>
+            <p id="password-error" class="text-error text-caption mt-xs hidden">Incorrect password. Please try again.</p>
+        </div>
+
+        <!-- Workspace Area (Hidden) -->
+        <div id="workspace" class="hidden w-full mt-xl flex flex-col lg:flex-row gap-xl items-start">
+            
+            <!-- Canvas Preview -->
+            <div class="flex-grow w-full bg-canvas-soft border border-hairline rounded-md p-sm relative overflow-hidden flex justify-center">
+                <div class="relative max-w-full overflow-auto">
+                    <canvas id="pdf-canvas" class="w-full h-auto border border-hairline shadow-sm"></canvas>
+                    
+                    <!-- Crop overlay with resize handles -->
+                    <div id="crop-box" class="absolute border-2 border-link bg-link/10 hidden group cursor-move touch-none">
+                        <div class="absolute w-4 h-4 bg-canvas border-2 border-link rounded-full -top-2 -left-2 cursor-nwse-resize resize-handle" data-pos="nw"></div>
+                        <div class="absolute w-4 h-4 bg-canvas border-2 border-link rounded-full -top-2 -right-2 cursor-nesw-resize resize-handle" data-pos="ne"></div>
+                        <div class="absolute w-4 h-4 bg-canvas border-2 border-link rounded-full -bottom-2 -left-2 cursor-nesw-resize resize-handle" data-pos="sw"></div>
+                        <div class="absolute w-4 h-4 bg-canvas border-2 border-link rounded-full -bottom-2 -right-2 cursor-nwse-resize resize-handle" data-pos="se"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Sidepanel -->
+            <div class="w-full lg:w-[320px] shrink-0 flex flex-col gap-md">
+                <div class="card-marketing bg-canvas p-md">
+                    <h3 class="text-body-md-strong text-ink mb-xs">Aadhaar Found</h3>
+                    <p class="text-body-sm text-mute mb-md">We've loaded your file securely. Select an export format below.</p>
+                    
+                    <div class="flex flex-col gap-sm">
+                        <button id="btn-dl-png" class="btn-primary w-full justify-between px-md">
+                            <span>Download PNG</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
+                        <button id="btn-dl-jpg" class="btn-secondary w-full justify-between px-md">
+                            <span>Download JPG</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
+                        <button id="btn-dl-pdf" class="btn-secondary w-full justify-between px-md">
+                            <span>Print on A4 (PDF)</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+                        </button>
+                        <button id="btn-dl-pdf-crop" class="btn-secondary w-full justify-between px-md">
+                            <span>Original Size (PDF)</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+                        </button>
+                    </div>
+
+                    <button id="btn-reset" class="text-error text-sm font-medium hover:underline mt-lg w-full text-center">Start Over</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Client side processing script -->
+    <script>
+        import * as pdfjsLib from 'pdfjs-dist';
+        import { PDFDocument } from 'pdf-lib';
+        import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+        
+        // Setup PDF.js worker securely via Vite asset URL
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+        const uploadCard = document.getElementById('upload-card') as HTMLDivElement;
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        const pwdModal = document.getElementById('password-modal') as HTMLDivElement;
+        const pwdForm = document.getElementById('password-form') as HTMLFormElement;
+        const pwdInput = document.getElementById('pdf-password') as HTMLInputElement;
+        const pwdError = document.getElementById('password-error') as HTMLParagraphElement;
+        const workspace = document.getElementById('workspace') as HTMLDivElement;
+        const canvas = document.getElementById('pdf-canvas') as HTMLCanvasElement;
+        const cropBox = document.getElementById('crop-box') as HTMLDivElement;
+        const btnReset = document.getElementById('btn-reset') as HTMLButtonElement;
+        
+        let activeFile: File | null = null;
+        let activePdfData: Uint8Array | null = null;
+        let pdfDocProxy: any = null;
+        let cropCoordinates = { x: 0, y: 0, width: 0, height: 0 };
+        
+        let isDragging = false;
+        let isResizing = false;
+        let resizePos = '';
+        let lastMouse = { x: 0, y: 0 };
+
+        function updateCropBoxVisuals() {
+            cropBox.style.width = `${(cropCoordinates.width / canvas.width) * 100}%`;
+            cropBox.style.height = `${(cropCoordinates.height / canvas.height) * 100}%`;
+            cropBox.style.left = `${(cropCoordinates.x / canvas.width) * 100}%`;
+            cropBox.style.top = `${(cropCoordinates.y / canvas.height) * 100}%`;
+        }
+
+        cropBox.addEventListener('mousedown', (e) => {
+            if ((e.target as HTMLElement).classList.contains('resize-handle')) {
+                isResizing = true;
+                resizePos = (e.target as HTMLElement).dataset.pos || '';
+            } else {
+                isDragging = true;
+            }
+            lastMouse = { x: e.clientX, y: e.clientY };
+            document.body.style.userSelect = 'none';
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging && !isResizing) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const dx = (e.clientX - lastMouse.x) * scaleX;
+            const dy = (e.clientY - lastMouse.y) * scaleY;
+            if (isDragging) {
+                cropCoordinates.x += dx;
+                cropCoordinates.y += dy;
+            } else if (isResizing) {
+                if (resizePos.includes('w')) { cropCoordinates.x += dx; cropCoordinates.width -= dx; }
+                if (resizePos.includes('e')) { cropCoordinates.width += dx; }
+                if (resizePos.includes('n')) { cropCoordinates.y += dy; cropCoordinates.height -= dy; }
+                if (resizePos.includes('s')) { cropCoordinates.height += dy; }
+            }
+            // Constrain
+            cropCoordinates.width = Math.max(50, Math.min(cropCoordinates.width, canvas.width - cropCoordinates.x));
+            cropCoordinates.height = Math.max(50, Math.min(cropCoordinates.height, canvas.height - cropCoordinates.y));
+            cropCoordinates.x = Math.max(0, Math.min(cropCoordinates.x, canvas.width - cropCoordinates.width));
+            cropCoordinates.y = Math.max(0, Math.min(cropCoordinates.y, canvas.height - cropCoordinates.height));
+            
+            lastMouse = { x: e.clientX, y: e.clientY };
+            updateCropBoxVisuals();
+        });
+        
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            isResizing = false;
+            document.body.style.userSelect = '';
+        });
+        
+        // Track Visitor
+        fetch('/api/stats', { method: 'POST', body: JSON.stringify({ action: 'visitor' }) }).catch(e => {});
+
+        // Event Listeners for Upload
+        uploadCard.addEventListener('click', () => fileInput.click());
+        uploadCard.addEventListener('dragover', (e) => { e.preventDefault(); uploadCard.classList.add('border-primary', 'bg-canvas-soft-2'); });
+        uploadCard.addEventListener('dragleave', () => { uploadCard.classList.remove('border-primary', 'bg-canvas-soft-2'); });
+        uploadCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadCard.classList.remove('border-primary', 'bg-canvas-soft-2');
+            if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        async function handleFile(file: File) {
+            activeFile = file;
+            uploadCard.classList.add('hidden');
+            
+            // Track Upload
+            fetch('/api/stats', { method: 'POST', body: JSON.stringify({ action: 'upload' }) }).catch(e => {});
+
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                activePdfData = new Uint8Array(arrayBuffer);
+                loadPdf(activePdfData);
+            } else if (file.type.startsWith('image/')) {
+                // Handle image (Direct draw)
+                loadImage(file);
+            } else {
+                alert("Please upload a valid PDF or Image file.");
+                reset();
+            }
+        }
+
+        async function loadPdf(data: Uint8Array, password?: string) {
+            try {
+                // Pass a cloned copy of the data using .slice() to prevent the worker from detaching the original ArrayBuffer
+                const loadingTask = pdfjsLib.getDocument({ data: data.slice(), password });
+                pdfDocProxy = await loadingTask.promise;
+                
+                // Hide password modal if it was open
+                pwdModal.classList.add('hidden');
+                pwdError.classList.add('hidden');
+                
+                // Render page 1
+                await renderPage(1);
+            } catch (error: any) {
+                if (error.name === 'PasswordException') {
+                    // Show password modal
+                    pwdModal.classList.remove('hidden');
+                    pwdInput.focus();
+                } else {
+                    alert("Error loading PDF: " + error.message);
+                    reset();
+                }
+            }
+        }
+
+        pwdForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pwd = pwdInput.value;
+            if (pwd && activePdfData) {
+                loadPdf(activePdfData, pwd).catch(e => {
+                    pwdError.classList.remove('hidden');
+                });
+            }
+        });
+
+        async function renderPage(pageNum: number) {
+            const page = await pdfDocProxy.getPage(pageNum);
+            
+            // Use a large scale (5.0) for print-quality export (approx 300+ DPI)
+            const scale = 5.0; 
+            const viewport = page.getViewport({ scale });
+
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+
+            const renderContext = {
+                canvasContext: ctx!,
+                viewport: viewport
+            };
+
+            await page.render(renderContext).promise;
+            
+            // Setup crop box. E-Aadhaar is usually A4 (width~595, height~842)
+            // The card is positioned roughly at the bottom 1/3rd.
+            // These coordinates are relative to the canvas.
+            // Let's set a default crop box that represents the Aadhaar card size.
+            
+            const cardAspect = 186 / 55; // Approximate aspect ratio of standard Aadhaar front+back combined
+            cropCoordinates.width = canvas.width * 0.9;
+            cropCoordinates.height = cropCoordinates.width / cardAspect;
+            cropCoordinates.x = canvas.width * 0.05;
+            cropCoordinates.y = canvas.height * 0.65; // Bottom area
+            
+            // Draw visual crop box
+            updateCropBoxVisuals();
+            cropBox.classList.remove('hidden');
+
+            workspace.classList.remove('hidden');
+        }
+
+        async function loadImage(file: File) {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0);
+                
+                // For direct images, assume the user cropped it mostly or we just select the whole image
+                cropCoordinates = { x: 0, y: 0, width: canvas.width, height: canvas.height };
+                workspace.classList.remove('hidden');
+            };
+            img.src = url;
+        }
+
+        function getCroppedCanvas(): HTMLCanvasElement {
+            const destCanvas = document.createElement('canvas');
+            destCanvas.width = cropCoordinates.width;
+            destCanvas.height = cropCoordinates.height;
+            const destCtx = destCanvas.getContext('2d');
+            
+            destCtx?.drawImage(
+                canvas, 
+                cropCoordinates.x, cropCoordinates.y, cropCoordinates.width, cropCoordinates.height,
+                0, 0, cropCoordinates.width, cropCoordinates.height
+            );
+            
+            return destCanvas;
+        }
+
+        function downloadDataUrl(dataUrl: string, filename: string) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Track successful crop
+            fetch('/api/stats', { method: 'POST', body: JSON.stringify({ action: 'crop' }) }).catch(e => {});
+        }
+
+        // Export Controls
+        document.getElementById('btn-dl-png')?.addEventListener('click', () => {
+            const cropped = getCroppedCanvas();
+            downloadDataUrl(cropped.toDataURL('image/png'), 'aadhaar_crop.png');
+        });
+
+        document.getElementById('btn-dl-jpg')?.addEventListener('click', () => {
+            const cropped = getCroppedCanvas();
+            downloadDataUrl(cropped.toDataURL('image/jpeg', 1.0), 'aadhaar_crop.jpg');
+        });
+
+        document.getElementById('btn-dl-pdf')?.addEventListener('click', async () => {
+            const cropped = getCroppedCanvas();
+            // Use maximum quality JPEG for embedding to keep file size reasonable while preserving sharpness
+            const jpgImageBytes = await fetch(cropped.toDataURL('image/jpeg', 1.0)).then((res) => res.arrayBuffer());
+            
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage([595.28, 841.89]); // A4 Size
+            
+            const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
+            
+            // Scale to fit width while maintaining aspect ratio, with margin
+            const margin = 50;
+            const maxWidth = page.getWidth() - margin * 2;
+            const imgDims = jpgImage.scaleToFit(maxWidth, page.getHeight());
+            
+            page.drawImage(jpgImage, {
+                x: page.getWidth() / 2 - imgDims.width / 2,
+                y: page.getHeight() - imgDims.height - margin, // Top align
+                width: imgDims.width,
+                height: imgDims.height,
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            downloadDataUrl(URL.createObjectURL(blob), 'aadhaar_a4.pdf');
+        });
+
+        document.getElementById('btn-dl-pdf-crop')?.addEventListener('click', async () => {
+            const cropped = getCroppedCanvas();
+            const jpgImageBytes = await fetch(cropped.toDataURL('image/jpeg', 1.0)).then((res) => res.arrayBuffer());
+            
+            const pdfDoc = await PDFDocument.create();
+            const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
+            
+            // Page size matches exactly the image dimensions
+            const page = pdfDoc.addPage([jpgImage.width, jpgImage.height]);
+            
+            page.drawImage(jpgImage, {
+                x: 0,
+                y: 0,
+                width: jpgImage.width,
+                height: jpgImage.height,
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            downloadDataUrl(URL.createObjectURL(blob), 'aadhaar_original.pdf');
+        });
+
+        function reset() {
+            activeFile = null;
+            activePdfData = null;
+            pdfDocProxy = null;
+            fileInput.value = '';
+            pwdInput.value = '';
+            
+            uploadCard.classList.remove('hidden');
+            pwdModal.classList.add('hidden');
+            workspace.classList.add('hidden');
+            cropBox.classList.add('hidden');
+        }
+
+        btnReset.addEventListener('click', reset);
+    </script>
+</Layout>

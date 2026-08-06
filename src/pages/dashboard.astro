@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Dashboard & Analytics">
+    <div class="w-full max-w-[1000px] mx-auto px-lg py-5xl">
+        <h1 class="text-display-lg font-bold tracking-tight text-ink mb-xs">Live Dashboard</h1>
+        <p class="text-body-lg text-body mb-xl">Real-time usage statistics for TF Aadhaar Cropper.</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-lg mb-2xl">
+            <div class="card-marketing bg-canvas-soft border-t-4 border-primary">
+                <h3 class="text-caption-mono text-mute mb-xs">Total Visitors</h3>
+                <p class="text-display-xl font-bold text-ink" id="stat-visitors">-</p>
+            </div>
+            <div class="card-marketing bg-canvas-soft border-t-4 border-link">
+                <h3 class="text-caption-mono text-mute mb-xs">Aadhaar Uploads</h3>
+                <p class="text-display-xl font-bold text-ink" id="stat-uploads">-</p>
+            </div>
+            <div class="card-marketing bg-canvas-soft border-t-4 border-cyan-deep">
+                <h3 class="text-caption-mono text-mute mb-xs">Successful Crops</h3>
+                <p class="text-display-xl font-bold text-ink" id="stat-crops">-</p>
+            </div>
+        </div>
+
+        <div class="card-marketing">
+            <h2 class="text-display-sm font-semibold text-ink mb-md">About This Data</h2>
+            <p class="text-body-md text-body">
+                The statistics shown above represent the global usage of this tool. These counters are fully anonymous. We do not store any identifying information about users, nor do we store any of the uploaded files. 
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                
+                if (data) {
+                    const formatNumber = (num: number) => new Intl.NumberFormat('en-IN').format(num);
+                    
+                    document.getElementById('stat-visitors')!.innerText = formatNumber(data.visitors || 0);
+                    document.getElementById('stat-uploads')!.innerText = formatNumber(data.uploads || 0);
+                    document.getElementById('stat-crops')!.innerText = formatNumber(data.success_crops || 0);
+                }
+            } catch (error) {
+                console.error("Failed to load stats:", error);
+            }
+        }
+        
+        // Fetch initially
+        fetchStats();
+
+        // Refresh every 30 seconds
+        setInterval(fetchStats, 30000);
+    </script>
+</Layout>
