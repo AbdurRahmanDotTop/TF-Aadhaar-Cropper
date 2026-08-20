@@ -272,10 +272,8 @@ import Layout from '../layouts/Layout.astro';
             
             // Setup crop box. E-Aadhaar is usually A4 (width~595, height~842)
             // The card is positioned roughly at the bottom 1/3rd.
-            // These coordinates are relative to the canvas.
-            // Let's set a default crop box that represents the Aadhaar card size.
-            
-            const cardAspect = 186 / 55; // Approximate aspect ratio of standard Aadhaar front+back combined
+            // Official PVC Card is 85.6mm x 53.98mm
+            const cardAspect = (85.6 * 2) / 53.98; // Front and back side-by-side
             cropCoordinates.width = canvas.width * 0.9;
             cropCoordinates.height = cropCoordinates.width / cardAspect;
             cropCoordinates.x = canvas.width * 0.05;
@@ -344,21 +342,14 @@ import Layout from '../layouts/Layout.astro';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, a4Width, a4Height);
                 
-                // Calculate size to fit width with margin
-                const margin = 100; // Left/Right margin
-                const topMargin = 80; // Top margin (~ 6.7mm)
-                
-                const maxWidth = a4Width - margin * 2;
+                // Official PVC Card Height = 53.98mm
+                // At 300 DPI, 1 mm = 300 / 25.4 = 11.811 pixels
+                // 53.98 mm * 11.811 pixels/mm ≈ 637.56 pixels
                 const aspect = croppedCanvas.width / croppedCanvas.height;
+                const drawHeight = 638; // Fixed to 53.98mm
+                const drawWidth = drawHeight * aspect;
                 
-                let drawWidth = maxWidth;
-                let drawHeight = drawWidth / aspect;
-                
-                if (drawHeight > a4Height - topMargin * 2) {
-                    drawHeight = a4Height - topMargin * 2;
-                    drawWidth = drawHeight * aspect;
-                }
-                
+                const topMargin = 80;
                 const x = (a4Width - drawWidth) / 2;
                 const y = topMargin;
                 
@@ -404,17 +395,19 @@ import Layout from '../layouts/Layout.astro';
             
             const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
             
-            // Scale to fit width while maintaining aspect ratio, with margin
-            const margin = 50;
-            const topMargin = 20; // Reduced top margin
-            const maxWidth = page.getWidth() - margin * 2;
-            const imgDims = jpgImage.scaleToFit(maxWidth, page.getHeight());
+            // Official PVC Card Height = 53.98mm
+            // PDF points = mm * (72 / 25.4)
+            const targetHeightPoints = 53.98 * (72 / 25.4); // ~153.01 points
+            const aspect = jpgImage.width / jpgImage.height;
+            const targetWidthPoints = targetHeightPoints * aspect;
+            
+            const topMargin = 50; 
             
             page.drawImage(jpgImage, {
-                x: page.getWidth() / 2 - imgDims.width / 2,
-                y: page.getHeight() - imgDims.height - topMargin, // Top align
-                width: imgDims.width,
-                height: imgDims.height,
+                x: page.getWidth() / 2 - targetWidthPoints / 2,
+                y: page.getHeight() - targetHeightPoints - topMargin, // Top align
+                width: targetWidthPoints,
+                height: targetHeightPoints,
             });
 
             const pdfBytes = await pdfDoc.save();
@@ -429,14 +422,18 @@ import Layout from '../layouts/Layout.astro';
             const pdfDoc = await PDFDocument.create();
             const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
             
-            // Page size matches exactly the image dimensions
-            const page = pdfDoc.addPage([jpgImage.width, jpgImage.height]);
+            // Official PVC Card Height = 53.98mm
+            const targetHeightPoints = 53.98 * (72 / 25.4); // ~153.01 points
+            const aspect = jpgImage.width / jpgImage.height;
+            const targetWidthPoints = targetHeightPoints * aspect;
+            
+            const page = pdfDoc.addPage([targetWidthPoints, targetHeightPoints]);
             
             page.drawImage(jpgImage, {
                 x: 0,
                 y: 0,
-                width: jpgImage.width,
-                height: jpgImage.height,
+                width: targetWidthPoints,
+                height: targetHeightPoints,
             });
 
             const pdfBytes = await pdfDoc.save();
