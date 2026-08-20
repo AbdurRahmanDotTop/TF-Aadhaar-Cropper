@@ -66,12 +66,20 @@ import Layout from '../layouts/Layout.astro';
                     
                     <div class="flex flex-col gap-sm">
                         <button id="btn-dl-png" class="btn-primary w-full justify-between px-md">
-                            <span>Download PNG</span>
+                            <span>Download PNG (Crop)</span>
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         </button>
                         <button id="btn-dl-jpg" class="btn-secondary w-full justify-between px-md">
-                            <span>Download JPG</span>
+                            <span>Download JPG (Crop)</span>
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
+                        <button id="btn-dl-png-a4" class="btn-secondary w-full justify-between px-md">
+                            <span>Print on A4 (PNG)</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+                        </button>
+                        <button id="btn-dl-jpg-a4" class="btn-secondary w-full justify-between px-md">
+                            <span>Print on A4 (JPG)</span>
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
                         </button>
                         <button id="btn-dl-pdf" class="btn-secondary w-full justify-between px-md">
                             <span>Print on A4 (PDF)</span>
@@ -323,6 +331,46 @@ import Layout from '../layouts/Layout.astro';
             fetch('/api/stats', { method: 'POST', body: JSON.stringify({ action: 'crop' }) }).catch(e => {});
         }
 
+        function getA4Canvas(croppedCanvas: HTMLCanvasElement): HTMLCanvasElement {
+            const a4Canvas = document.createElement('canvas');
+            // 300 DPI A4 size
+            const a4Width = 2480;
+            const a4Height = 3508;
+            a4Canvas.width = a4Width;
+            a4Canvas.height = a4Height;
+            const ctx = a4Canvas.getContext('2d');
+            if (ctx) {
+                // Fill white background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, a4Width, a4Height);
+                
+                // Calculate size to fit width with margin
+                const margin = 100; // Left/Right margin
+                const topMargin = 80; // Top margin (~ 6.7mm)
+                
+                const maxWidth = a4Width - margin * 2;
+                const aspect = croppedCanvas.width / croppedCanvas.height;
+                
+                let drawWidth = maxWidth;
+                let drawHeight = drawWidth / aspect;
+                
+                if (drawHeight > a4Height - topMargin * 2) {
+                    drawHeight = a4Height - topMargin * 2;
+                    drawWidth = drawHeight * aspect;
+                }
+                
+                const x = (a4Width - drawWidth) / 2;
+                const y = topMargin;
+                
+                // High quality image smoothing
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                ctx.drawImage(croppedCanvas, x, y, drawWidth, drawHeight);
+            }
+            return a4Canvas;
+        }
+
         // Export Controls
         document.getElementById('btn-dl-png')?.addEventListener('click', () => {
             const cropped = getCroppedCanvas();
@@ -332,6 +380,18 @@ import Layout from '../layouts/Layout.astro';
         document.getElementById('btn-dl-jpg')?.addEventListener('click', () => {
             const cropped = getCroppedCanvas();
             downloadDataUrl(cropped.toDataURL('image/jpeg', 1.0), 'aadhaar_crop.jpg');
+        });
+
+        document.getElementById('btn-dl-png-a4')?.addEventListener('click', () => {
+            const cropped = getCroppedCanvas();
+            const a4 = getA4Canvas(cropped);
+            downloadDataUrl(a4.toDataURL('image/png'), 'aadhaar_a4.png');
+        });
+
+        document.getElementById('btn-dl-jpg-a4')?.addEventListener('click', () => {
+            const cropped = getCroppedCanvas();
+            const a4 = getA4Canvas(cropped);
+            downloadDataUrl(a4.toDataURL('image/jpeg', 1.0), 'aadhaar_a4.jpg');
         });
 
         document.getElementById('btn-dl-pdf')?.addEventListener('click', async () => {
@@ -346,12 +406,13 @@ import Layout from '../layouts/Layout.astro';
             
             // Scale to fit width while maintaining aspect ratio, with margin
             const margin = 50;
+            const topMargin = 20; // Reduced top margin
             const maxWidth = page.getWidth() - margin * 2;
             const imgDims = jpgImage.scaleToFit(maxWidth, page.getHeight());
             
             page.drawImage(jpgImage, {
                 x: page.getWidth() / 2 - imgDims.width / 2,
-                y: page.getHeight() - imgDims.height - margin, // Top align
+                y: page.getHeight() - imgDims.height - topMargin, // Top align
                 width: imgDims.width,
                 height: imgDims.height,
             });
