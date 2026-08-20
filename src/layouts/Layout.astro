@@ -27,22 +27,37 @@ const { title, description = "Securely crop and process your Aadhaar Card PDFs o
         
         <!-- Prevent Flash of Unstyled Content (FOUC) for Dark Mode -->
         <script is:inline>
-            const theme = (() => {
+            function getTheme() {
                 if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
                     return localStorage.getItem('theme');
                 }
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     return 'dark';
                 }
                 return 'light';
-            })();
-        
-            if (theme === 'light') {
-                document.documentElement.classList.remove('dark');
-            } else {
-                document.documentElement.classList.add('dark');
             }
-            window.localStorage.setItem('theme', theme);
+            
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            
+            // Apply immediately on load
+            applyTheme(getTheme());
+            
+            // Listen for system theme changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    // Only apply if user hasn't manually overridden it
+                    if (!localStorage.getItem('theme')) {
+                        applyTheme(e.matches ? 'dark' : 'light');
+                        window.dispatchEvent(new Event('theme-changed'));
+                    }
+                });
+            }
         </script>
 	</head>
 	<body class="min-h-screen flex flex-col">
@@ -56,7 +71,7 @@ const { title, description = "Securely crop and process your Aadhaar Card PDFs o
                 
                 <nav class="flex items-center gap-1 md:gap-sm">
                     <a href="/" class="text-body text-xs md:text-sm font-medium hover:text-ink px-2 md:px-3 py-1.5 rounded-full hover:bg-canvas-soft-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">Home</a>
-                    <a href="/dashboard" class="text-body text-xs md:text-sm font-medium hover:text-ink px-2 md:px-3 py-1.5 rounded-full hover:bg-canvas-soft-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">Dashboard</a>
+                    <a href="/dashboard" class="text-body text-xs md:text-sm font-medium hover:text-link px-2 md:px-3 py-1.5 rounded-full hover:bg-canvas-soft-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">Dashboard</a>
                     <a href="/contact" class="hidden sm:inline-block text-body text-xs md:text-sm font-medium hover:text-ink px-2 md:px-3 py-1.5 rounded-full hover:bg-canvas-soft-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">Contact Us</a>
                     
                     <button id="theme-toggle" class="ml-1 md:ml-2 p-2 rounded-full text-body hover:text-ink hover:bg-canvas-soft-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" aria-label="Toggle Dark Mode">
@@ -134,6 +149,9 @@ const { title, description = "Securely crop and process your Aadhaar Card PDFs o
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 updateThemeUI();
             });
+            
+            // Listen for changes from the inline head script
+            window.addEventListener('theme-changed', updateThemeUI);
         </script>
 	</body>
 </html>
